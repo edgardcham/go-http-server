@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 )
 
@@ -17,11 +18,14 @@ func (cfg *apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Request) 
 	err := decoder.Decode(&params)
 	if err != nil {
 		respondWithError(w, 400, "Something went wrong")
+		return
 	}
 
 	user, err := cfg.db.CreateUser(r.Context(), params.Email)
 	if err != nil {
+		fmt.Printf("Database error: %v\n", err)
 		respondWithError(w, 400, "Could not create user in database")
+		return
 	}
 
 	userResponse := User{

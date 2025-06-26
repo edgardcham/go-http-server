@@ -59,6 +59,6 @@ func main() {
 	mux.HandleFunc("GET /api/healthz", handlerHealthz)
 	mux.HandleFunc("POST /api/validate_chirp", handlerValidateChirp)
 	mux.HandleFunc("POST /api/users", apiConfig.handlerCreateUser)
-
+	mux.HandleFunc("POST /api/chirps", apiConfig.handlerCreateChirp)
 	server.ListenAndServe()
 }
