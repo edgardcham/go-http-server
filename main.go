@@ -9,15 +9,23 @@ import (
 	"os"
 
 	"github.com/edgardcham/go-http-server/internal/database"
+	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
 
 type apiConfig struct {
 	fileserverHits atomic.Int32
 	db             *database.Queries
+	platform       string
 }
 
 func main() {
+	// load .env
+	err := godotenv.Load()
+	if err != nil {
+		fmt.Println("No .env found")
+		os.Exit(1)
+	}
 	// get db url
 	dbURL := os.Getenv("DB_URL")
 	// open connection
@@ -28,11 +36,14 @@ func main() {
 		fmt.Println("Couldn't establish connection to DB")
 		os.Exit(1)
 	}
+
+	defer db.Close()
 	// This defines a multiplexer/router
 	mux := http.NewServeMux()
 	apiConfig := apiConfig{
 		fileserverHits: atomic.Int32{},
 		db:             dbQueries,
+		platform:       os.Getenv("PLATFORM"),
 	}
 
 	// this instantiates the server
@@ -47,6 +58,7 @@ func main() {
 	mux.HandleFunc("POST /admin/reset", apiConfig.handlerResetMetrics)
 	mux.HandleFunc("GET /api/healthz", handlerHealthz)
 	mux.HandleFunc("POST /api/validate_chirp", handlerValidateChirp)
+	mux.HandleFunc("POST /api/users", apiConfig.handlerCreateUser)
 
 	server.ListenAndServe()
 }

@@ -32,7 +32,13 @@ func (cfg *apiConfig) handlerMetrics(w http.ResponseWriter, r *http.Request) {
 
 // handlerResetMetrics is a handler that resets the fileserverHits counter
 func (cfg *apiConfig) handlerResetMetrics(w http.ResponseWriter, r *http.Request) {
+	if cfg.platform != "dev" {
+		respondWithError(w, 403, "Not authorized")
+		return
+	}
+	cfg.db.Reset(r.Context())
 	cfg.fileserverHits.Store(0)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Hits reset to 0"))
+
 }
