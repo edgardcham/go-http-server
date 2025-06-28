@@ -3,8 +3,10 @@ package main
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/edgardcham/go-http-server/internal/auth"
+	"github.com/edgardcham/go-http-server/internal/database"
 )
 
 func (cfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
@@ -35,11 +37,39 @@ func (cfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// create token
+
+	jwtToken, err := auth.MakeJWT(user.ID, cfg.jwtSecret, time.Duration(3600)*time.Second)
+	if err != nil {
+		respondWithError(w, 400, "Error creating JWT")
+		return
+	}
+
+	// refresh token
+	refreshToken, err := auth.MakeRefreshToken()
+	if err != nil {
+		respondWithError(w, 400, "Error creating refresh token")
+		return
+	}
+
+	refreshTokenDBParams := database.CreateRefreshTokenParams{
+		Token:     refreshToken,
+		UserID:    user.ID,
+		ExpiresAt: time.Now().Add(60 * 24 * time.Hour),
+	}
+	_, err = cfg.db.CreateRefreshToken(r.Context(), refreshTokenDBParams)
+	if err != nil {
+		respondWithError(w, 400, "Couldn't store refresh token")
+		return
+	}
+
 	userResponse := User{
-		ID:        user.ID,
-		Email:     user.Email,
-		CreatedAt: user.CreatedAt,
-		UpdatedAt: user.UpdatedAt,
+		ID:           user.ID,
+		Email:        user.Email,
+		CreatedAt:    user.CreatedAt,
+		UpdatedAt:    user.UpdatedAt,
+		Token:        jwtToken,
+		RefreshToken: refreshToken,
 	}
 
 	respondWithJSON(w, 200, userResponse)

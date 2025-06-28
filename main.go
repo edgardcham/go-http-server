@@ -17,6 +17,7 @@ type apiConfig struct {
 	fileserverHits atomic.Int32
 	db             *database.Queries
 	platform       string
+	jwtSecret      string
 }
 
 func main() {
@@ -44,6 +45,7 @@ func main() {
 		fileserverHits: atomic.Int32{},
 		db:             dbQueries,
 		platform:       os.Getenv("PLATFORM"),
+		jwtSecret:      os.Getenv("JWT_SECRET_KEY"),
 	}
 
 	// this instantiates the server
@@ -63,6 +65,8 @@ func main() {
 	mux.HandleFunc("GET /api/chirps", apiConfig.handlerGetAllChirps)
 	mux.HandleFunc("GET /api/chirps/{chirpID}", apiConfig.handlerGetChirpByID)
 	mux.HandleFunc("POST /api/login", apiConfig.handlerLogin)
+	mux.HandleFunc("POST /api/refresh", apiConfig.handlerRefresh)
+	mux.HandleFunc("POST /api/revoke", apiConfig.handlerRevoke)
 
 	server.ListenAndServe()
 }
