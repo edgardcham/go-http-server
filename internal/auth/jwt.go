@@ -79,3 +79,15 @@ func GetBearerToken(headers http.Header) (string, error) {
 	}
 	return authHeaderArr[1], nil
 }
+
+func GetAPIKey(headers http.Header) (string, error) {
+	authHeader := headers.Get("Authorization")
+	if authHeader == "" {
+		return "", fmt.Errorf("no api key set")
+	}
+	authHeaderArr := strings.Split(authHeader, " ")
+	if len(authHeaderArr) != 2 {
+		return "", fmt.Errorf("incorrect bearer format")
+	}
+	return authHeaderArr[1], nil
+}

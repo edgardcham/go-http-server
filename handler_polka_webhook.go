@@ -4,10 +4,21 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/edgardcham/go-http-server/internal/auth"
 	"github.com/google/uuid"
 )
 
 func (cfg *apiConfig) handlerPolkaWebhook(w http.ResponseWriter, r *http.Request) {
+	key, err := auth.GetAPIKey(r.Header)
+	if err != nil {
+		respondWithError(w, 401, "No API Key set")
+		return
+	}
+	if key != cfg.polkaAPIKey {
+		respondWithError(w, 401, "Invalid API Key")
+		return
+	}
+
 	type parameters struct {
 		Event string `json:"event"`
 		Data  struct {
@@ -19,7 +30,7 @@ func (cfg *apiConfig) handlerPolkaWebhook(w http.ResponseWriter, r *http.Request
 
 	params := parameters{}
 
-	err := decoder.Decode(&params)
+	err = decoder.Decode(&params)
 
 	if err != nil {
 		respondWithError(w, 400, "Couldn't decode payload")
