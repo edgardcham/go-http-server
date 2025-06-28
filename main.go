@@ -69,6 +69,7 @@ func main() {
 	mux.HandleFunc("POST /api/revoke", apiConfig.handlerRevoke)
 	mux.HandleFunc("PUT /api/users", apiConfig.handlerUpdateUser)
 	mux.HandleFunc("DELETE /api/chirps/{chirpID}", apiConfig.handlerDeleteChirp)
+	mux.HandleFunc("POST /api/polka/webhooks", apiConfig.handlerPolkaWebhook)
 
 	server.ListenAndServe()
 }
